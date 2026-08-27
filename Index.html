@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>The Expanse — Карта</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #0b0e14;
+            touch-action: none;
+            position: fixed;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            background: #0b0e14;
+            cursor: grab;
+            touch-action: none;
+        }
+        canvas:active { cursor: grabbing; }
+        .pointer { cursor: pointer !important; }
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #8898a8;
+            font: 14px monospace;
+            pointer-events: none;
+            text-shadow: 0 0 3px #000;
+            z-index: 10;
+        }
+        #info-menu {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 30, 60, 0.85);
+            border: 1px solid #00aaff;
+            box-shadow: 0 0 20px rgba(0, 170, 255, 0.4);
+            border-radius: 8px;
+            padding: 15px;
+            color: #cceeff;
+            font-family: 'Courier New', monospace;
+            display: none;
+            z-index: 20;
+            width: 90%;
+            max-width: 320px;
+            text-align: center;
+        }
+        #info-menu button {
+            background: #0066aa;
+            color: #ffffff;
+            border: 1px solid #00ccff;
+            border-radius: 4px;
+            padding: 5px 15px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            font-family: inherit;
+        }
+        #info-menu .description {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="hud">Загрузка...</div>
+    <div id="info-menu">
+        <a id="menu-go-btn" href="#" target="_blank" style="display:inline-block; background:#0066aa; color:#ffffff; border:1px solid #00ccff; border-radius:4px; padding:5px 15px; cursor:pointer; margin-bottom:10px; text-decoration:none;">Перейти в локацию</a>
+        <div class="description" id="menu-description">Описание отсутствует</div>
+    </div>
+    <script>
+        // ============================================================
+        // 1. КОНФИГУРАЦИЯ (планеты, спутники, свечение, пояс астероидов)
+        // ============================================================
+        const CONFIG = {
+            sunRadius: 20,
+            minGlowPx: 1,
+            maxGlowPx: 8,
+            labelThreshold: 30,
+            asteroidBelt: {
+                enabled: true,
+                innerRadius: 2.2 * 214.8,
+                outerRadius: 3.2 * 214.8,
+                count: 2000,
+                color: "#8a8f98",
+                periodDays: 1500          // период обращения всего пояса
+            },
+            planetData: [
+                {
+                    name: "Mercury",
+                    nameRu: "Меркурий",
+                    a: 83,
+                    e: 0.2056,
+                    peri: 29.124 * Math.PI / 180,
+                    radius: 0.8,
+                    color: "#ada8a5",
+                    angle: 0.1,
+                    periodDays: 87.969
+                },
+                {
+                    name: "Venus",
+                    nameRu: "Венера",
+                    a: 155,
+                    e: 0.0068,
+                    peri: 54.85 * Math.PI / 180,
+                    radius: 1.8,
+                    color: "#e6c87a",
+                    angle: 0.5,
+                    periodDays: 224.701
+                },
+                {
+                    name: "Earth",
+                    nameRu: "Земля",
+                    a: 214.8,
+                    e: 0.0167,
+                    peri: 102.9 * Math.PI / 180,
+                    radius: 2.0,
+                    color: "#6baed6",
+                    angle: 0.2,
+                    periodDays: 365.25,
+                    description: "Земля, — третья планета Солнечной системы и историческая колыбель человечества.",
+                    link: "https://t.me/c/3293763829/2",
+                    satellites: [
+                        {
+                            name: "Moon",
+                            nameRu: "Луна",
+                            aWorld: 11.04,
+                            e: 0.0549,
+                            peri: 318.15 * Math.PI / 180,
+                            radius: 0.5,
+                            color: "#cccccc",
+                            angle: 0,
+                            periodDays: 27.32166,
+                            description: "Луна — единственный спутник Земли. Это также пятый по величине спутник в Солнечной системе.",
+                            link: "https://t.me/c/3293763829/6",
+                            satellites: [
+                                {
+                                    name: "BushShipyards",
+                                    nameRu: "Верфи Буша",
+                                    aWorld: 1.5,
+                                    e: 0.0,
+                                    peri: 0,
+                                    radius: 0.02,
+                                    color: "#40E0D0",
+                                    angle: 0,
+                                    periodDays: 0.1,
+                                    description: "Орбитальные верфи Буша — это гражданские верфи, которые являются таким же центром торговли и путешествий, как и главный космопорт Луны.",
+                                    link: "https://t.me/c/3293763829/12"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    name: "Mars",
+                    nameRu: "Марс",
+                    a: 327.9,
+                    e: 0.0934,
+                    peri: 336.04 * Math.PI / 180,
+                    radius: 1.2,
+                    color: "#c1440e",
+                    angle: 0.7,
+                    periodDays: 686.98,
+                    description: "Проект по терраформированию, который некоторые считают величайшим инженерным проектом в истории человечества, является движущей силой марсианского общества и прямо или косвенно затрагивает большую часть населения Марса.",
+                    link: "https://t.me/c/3293763829/21",
+                    satellites: [
+                        {
+                            name: "Phobos",
+                            nameRu: "Фобос",
+                            aWorld: 3.3,
+                            e: 0.0151,
+                            peri: 0,
+                            radius: 0.05,
+                            color: "#a0a0a0",
+                            angle: 0,
+                            periodDays: 0.3189,
+                            description: "На поверхности Деймоса располагается военные объекты и радиолокационная станция, а его население составляет всего лишь 12 человек.",
+                            link: "https://t.me/c/3293763829/55"
+                        },
+                        {
+                            name: "Deimos",
+                            nameRu: "Деймос",
+                            aWorld: 8.3,
+                            e: 0.0002,
+                            peri: 0,
+                            radius: 0.03,
+                            color: "#b0a090",
+                            angle: 0,
+                            periodDays: 1.263,
+                            description: "Скоро...",
+                            link: "https://t.me/c/3293763829/18"
+                        }
+                    ]
+                },
+                {
+                    name: "Ceres",
+                    nameRu: "Церера",
+                    a: 595.0,                  // 2.77 а.е. * 214.8
+                    e: 0.0758,
+                    peri: 0,
+                    radius: 0.25,
+                    color: "#b0b0b0",
+                    angle: 1.2,
+                    periodDays: 1681.63,
+                    showOrbit: false,
+                    description: "«Церера» является главным космопортом Пояса, на ней проживает около шести миллионов жителей и постоянно пребывает миллион посетителей.",
+                    link: "https://t.me/c/3293763829/86"
+                },
+                {
+                    name: "Vesta",
+                    nameRu: "Веста",
+                    a: 507.0,                  // 2.36 а.е.
+                    e: 0.0894,
+                    peri: 0,
+                    radius: 0.15,
+                    color: "#c0c0c0",
+                    angle: 2.5,
+                    periodDays: 1325.46,
+                    showOrbit: false,
+                    description: "Вестанские верфи, одна из крупнейших кораблестроительных и ремонтных верфей Пояса.",
+                    link: "https://t.me/c/3293763829/113"
+                },
+                {
+                    name: "Pallas",
+                    nameRu: "Паллада",
+                    a: 595.0,                  // 2.77 а.е.
+                    e: 0.231,
+                    peri: 0,
+                    radius: 0.15,
+                    color: "#a08060",
+                    angle: 3.8,
+                    periodDays: 1683.9,
+                    showOrbit: false,
+                    description: "Станция Паллада, известна своими экстремистскими группировками астеров, отколовшимися от колонии.",
+                    link: "https://t.me/c/3293763829/78"
+                },
+                {
+                    name: "Hygiea",
+                    nameRu: "Гигея",
+                    a: 674.0,                  // 3.14 а.е.
+                    e: 0.117,
+                    peri: 0,
+                    radius: 0.12,
+                    color: "#808080",
+                    angle: 4.1,
+                    periodDays: 2031.6,
+                    showOrbit: false,
+                    description: "Гигея сформировалась как промышленный узел, специализирующийся на добыче и переработке полезных ископаемых, особенно никеля и железа.",
+                    lind: "https://t.me/c/3293763829/118"
+                },
+                {
+                    name: "Tycho",
+                    nameRu: "Тихо",
+                    a: 601.0,                  // примерное 2.8 а.е.
+                    e: 0.05,
+                    peri: 0,
+                    radius: 0.1,
+                    color: "#d0d0d0",          // серебристый
+                    angle: 5.2,
+                    periodDays: 1680,         // примерно 4.6 года
+                    showOrbit: false,
+                    description: "Станция Тихо является единственной верфью в Солнечной системе, которая имеет возможности и мощности для строительства более крупных судов, чем верфи Буша на Луне.",
+                    link: "https://t.me/c/3293763829/93"
+                },
+                {
+                    name: "Eros",
+                    nameRu: "Эрос",
+                    a: 313.0,                  // 1.458 а.е. (ближе к Марсу, но оставим реальное значение)
+                    e: 0.2229,
+                    peri: 0,
+                    radius: 0.1,
+                    color: "#b07050",
+                    angle: 0.9,
+                    periodDays: 643.1,
+                    showOrbit: false,
+                    description: "На Эросе корабль может ждать неделями или месяцами, не мешая движению других судов. Если команде нужно место, где можно расслабиться, размяться, ненадолго отдохнуть друг от друга, они отправлялись на «Эрос».",
+                    link: "https://t.me/c/3293763829/100"
+                },
+                {
+                    name: "Jupiter",
+                    nameRu: "Юпитер",
+                    a: 5.2 * 214.8,          // ≈ 1117.0 (реальная большая полуось)
+                    e: 0.0489,
+                    peri: 14.75 * Math.PI / 180,
+                    radius: 8.0,             // визуальный радиус (больше Земли, но не слишком огромный)
+                    color: "#d8a06a",        // оранжево-коричневый
+                    angle: 2.2,
+                    periodDays: 4332.59,     // ~11.86 лет
+                    satellites: [
+                        {
+                            name: "Io",
+                            nameRu: "Ио",
+                            aWorld: 47.2,      // 8.0 * 5.9 (реальное расстояние в радиусах Юпитера)
+                            e: 0.0041,
+                            peri: 10,
+                            radius: 0.5,
+                            color: "#d4c47a",
+                            angle: 0,
+                            periodDays: 1.769,
+                            description: "Ио — один из спутников Юпитера и четвёртый по величине спутник в Солнечной системе, немного больше Луны.",
+                            link: "https://t.me/c/3293763829/123"
+                        },
+                        {
+                            name: "Europa",
+                            nameRu: "Европа",
+                            aWorld: 75.2,      // 8.0 * 9.4
+                            e: 0.0094,
+                            peri: 110,
+                            radius: 0.45,
+                            color: "#c0b0a0",
+                            angle: 0,
+                            periodDays: 3.551,
+                            description: "Европа стала одним из первых объектов колонизации во внешних планетах и важным сельскохозяйственным центром.",
+                            link: "https://t.me/c/3293763829/129"
+                        },
+                        {
+                            name: "Ganymede",
+                            nameRu: "Ганимед",
+                            aWorld: 120.0,     // 8.0 * 15.0
+                            e: 0.0013,
+                            peri: 87,
+                            radius: 0.7,
+                            color: "#a09080",
+                            angle: 0,
+                            periodDays: 7.155,
+                            description: "Ганимед получил прозвище «житница Пояса», его агрокупольные комплексы и огромные зеркала, отражающие солнечный свет на поверхность, кормили миллионы людей во Внешних планетах.",
+                            link: "https://t.me/c/3293763829/134"
+                        },
+                        {
+                            name: "Callisto",
+                            nameRu: "Каллисто",
+                            aWorld: 210.4,     // 8.0 * 26.3
+                            e: 0.0074,
+                            peri: 276,
+                            radius: 0.65,
+                            color: "#808080",
+                            angle: 0,
+                            periodDays: 16.689,
+                            description: "Каллисто сформировалась как промышленное сердце Юпитерианской системы.",
+                            link: "https://t.me/c/3293763829/139"
+                        }
+                    ]
+                },
+                {
+                    name: "Saturn",
+                    nameRu: "Сатурн",
+                    a: 9.58 * 214.8,         // ≈ 2057.9 (реальная большая полуось)
+                    e: 0.0565,
+                    peri: 30 * Math.PI / 180,
+                    radius: 7.0,             // визуальный радиус (меньше Юпитера)
+                    color: "#e0c080",        // золотисто-жёлтый
+                    angle: 4.0,
+                    periodDays: 10759.22,    // ~29.45 лет
+                    ring: {                        // ← добавить это
+                        innerFactor: 1.3,         // внутренний радиус кольца (в радиусах планеты)
+                        outerFactor: 2.3,         // внешний радиус кольца
+                        color: "#d0c8a0",         // цвет кольца
+                        alpha: 0.35               // прозрачность (0..1)
+                    },    
+                    satellites: [
+                        {
+                            name: "Enceladus",
+                            nameRu: "Энцелад",
+                            aWorld: 28.6,      // 7.0 * 4.08
+                            e: 0.0047,
+                            peri: 15 * Math.PI / 180,
+                            radius: 0.15,
+                            color: "#c0d0d0",
+                            angle: 0,
+                            periodDays: 1.370,
+                            description: "Под его ледяной корой скрывается глобальный океан, а южные полярные регионы известны мощными криовулканами, выбрасывающими струи водяного пара и льда на тысячи километров в космос.",
+                            link: "https://t.me/c/3293763829/143"
+                        },
+                        {
+                            name: "Rhea",
+                            nameRu: "Рея",
+                            aWorld: 63.4,      // 7.0 * 9.05
+                            e: 0.001,
+                            peri: 40 * Math.PI / 180,
+                            radius: 0.2,
+                            color: "#b0b0b0",
+                            angle: 0,
+                            periodDays: 4.518,
+                            description: "Рея — второй по величине спутник Сатурна, огромный шар водяного льда со скалистым ядром из силикатов.",
+                            link: "https://t.me/c/3293763829/149"
+                        },
+                        {
+                            name: "Titan",
+                            nameRu: "Титан",
+                            aWorld: 146.9,     // 7.0 * 20.98
+                            e: 0.0288,
+                            peri: 70 * Math.PI / 180,
+                            radius: 0.5,
+                            color: "#d0a060",
+                            angle: 0,
+                            periodDays: 15.945,
+                            description: "Титан стал одним из крупнейших центров колонизации внешней системы. Он известен своими роскошными купольными курортами.",
+                            link: "https://t.me/c/3293763829/156"
+                        },
+                        {
+                            name: "Iapetus",
+                            nameRu: "Япет",
+                            aWorld: 428.0,     // 7.0 * 61.15
+                            e: 0.0286,
+                            peri: 100 * Math.PI / 180,
+                            radius: 0.35,
+                            color: "#a09080",
+                            angle: 0,
+                            periodDays: 79.3215,
+                            description: "В истории Япет известен высокой концентрацией радикальных астерских группировок.",
+                            link: "https://t.me/c/3293763829/161"
+                        }
+                    ]
+                }
+            ],
+            initialScale: 0.06,            // изменено для видимости пояса
+            minScale: 0.002,
+            maxScale: 500,
+            bgColor: "#0b0e14",
+            sunColor: "#fccf66",
+            orbitColor: "#2a3a4a",
+            labelColor: "#8898a8",
+            followSpeed: 0.06,
+            timeScales: [1, 60, 3600, 86400, 2592000]
+        };
+
+        // ============================================================
+        // 2. ИНИЦИАЛИЗАЦИЯ
+        // ============================================================
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const hud = document.getElementById('hud');
+
+        let W, H;
+        function resize() {
+            const dpr = window.devicePixelRatio || 1;
+            W = window.innerWidth;
+            H = window.innerHeight;
+            canvas.width = W * dpr;
+            canvas.height = H * dpr;
+            canvas.style.width = W + 'px';
+            canvas.style.height = H + 'px';
+        }
+        window.addEventListener('resize', resize);
+        window.addEventListener('orientationchange', resize);
+        resize();
+
+        // ============================================================
+        // 3. ПЕРЕМЕННЫЕ СОСТОЯНИЯ
+        // ============================================================
+        let scale = CONFIG.initialScale;
+        let offsetX = 0, offsetY = 0;
+
+        let followTarget = null;
+        let followActive = false;
+        let followSmooth = false;
+        let smoothOffsetX = 0, smoothOffsetY = 0;
+        let smoothTargetX = 0, smoothTargetY = 0;
+
+        let dragging = false;
+        let dragStartX = 0, dragStartY = 0;
+
+        // --- ВРЕМЯ ---
+        const startDate = new Date(Date.UTC(2350, 0, 1, 0, 0, 0));
+        let simTimeDays = 0;
+        let timeScaleIndex = 1;
+        let timeScale = CONFIG.timeScales[timeScaleIndex];
+        let lastTimestamp = 0;
+
+        // --- Меню ---
+        const infoMenu = document.getElementById('info-menu');
+        const menuGoBtn = document.getElementById('menu-go-btn');
+        const menuDescription = document.getElementById('menu-description');
+        let menuTarget = null;
+        const menuExcluded = ['Jupiter', 'Saturn', 'Mercury', 'Venus'];
+
+        function showMenu(body) {
+            menuTarget = body;
+            menuDescription.textContent = body.description || 'Описание отсутствует';
+            infoMenu.style.display = 'block';
+            if (body.link) {
+                menuGoBtn.href = body.link;
+                menuGoBtn.style.display = 'inline-block';
+            } else {
+                menuGoBtn.href = '#';
+            }
+        }
+
+        function hideMenu() {
+            infoMenu.style.display = 'none';
+            menuTarget = null;
+        };
+
+        // --- АСТЕРОИДЫ ---
+        let asteroids = [];
+        function generateAsteroidBelt() {
+            asteroids = [];
+            const { innerRadius, outerRadius, count } = CONFIG.asteroidBelt;
+            const scaleFactor = CONFIG.sunRadius;
+            for (let i = 0; i < count; i++) {
+                const r = (innerRadius + Math.random() * (outerRadius - innerRadius)) * scaleFactor;
+                const theta0 = Math.random() * 2 * Math.PI;
+                asteroids.push({
+                    r: r,
+                    theta0: theta0
+                });
+            }
+        }
+        generateAsteroidBelt();
+
+        // ============================================================
+        // 4. ОРБИТАЛЬНАЯ МЕХАНИКА
+        // ============================================================
+        function getLocalOrbitPos(body, tDays) {
+            const a = body.aWorld !== undefined ? body.aWorld : (body.a * CONFIG.sunRadius);
+            const e = body.e;
+            const peri = body.peri || 0;
+            const n = 2 * Math.PI / body.periodDays;
+            const M = body.angle + n * tDays;
+
+            let E = M;
+            for (let i = 0; i < 10; i++) {
+                const dE = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+                E -= dE;
+                if (Math.abs(dE) < 1e-8) break;
+            }
+            const cosV = (Math.cos(E) - e) / (1 - e * Math.cos(E));
+            const sinV = (Math.sqrt(1 - e*e) * Math.sin(E)) / (1 - e * Math.cos(E));
+            const V = Math.atan2(sinV, cosV);
+            const r = a * (1 - e * Math.cos(E));
+            const x0 = r * Math.cos(V);
+            const y0 = r * Math.sin(V);
+            const cosPeri = Math.cos(peri);
+            const sinPeri = Math.sin(peri);
+            return {
+                x: x0 * cosPeri - y0 * sinPeri,
+                y: x0 * sinPeri + y0 * cosPeri
+            };
+        }
+
+        function setParents(arr, parent = null) {
+            for (const body of arr) {
+                body.parent = parent;
+                if (body.satellites) setParents(body.satellites, body);
+            }
+        }
+        setParents(CONFIG.planetData);
+
+        function getWorldPos(body, tDays) {
+            if (!body.parent) return getLocalOrbitPos(body, tDays);
+            const parentPos = getWorldPos(body.parent, tDays);
+            const local = getLocalOrbitPos(body, tDays);
+            return {
+                x: parentPos.x + local.x,
+                y: parentPos.y + local.y
+            };
+        }
+
+        function getWorldPosByName(name, tDays) {
+            function findInArray(arr) {
+                for (const body of arr) {
+                    if (body.name === name) return body;
+                    if (body.satellites) {
+                        const found = findInArray(body.satellites);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            }
+            const target = findInArray(CONFIG.planetData);
+            if (!target) return null;
+            return getWorldPos(target, tDays);
+        }
+
+        // ============================================================
+        // 5. МОДУЛЬ СЛЕЖЕНИЯ
+        // ============================================================
+        function startFollow(planetName) {
+            followTarget = planetName;
+            followActive = true;
+            followSmooth = true;
+            const pos = getWorldPosByName(planetName, simTimeDays);
+            if (pos) {
+                smoothTargetX = -pos.x * scale;
+                smoothTargetY = -pos.y * scale;
+                smoothOffsetX = offsetX;
+                smoothOffsetY = offsetY;
+            }
+        }
+
+        function stopFollow() {
+            followActive = false;
+            followTarget = null;
+            followSmooth = false;
+        }
+
+        function updateFollow() {
+            if (!followActive || !followTarget) return;
+            const pos = getWorldPosByName(followTarget, simTimeDays);
+            if (!pos) return;
+            const targetX = -pos.x * scale;
+            const targetY = -pos.y * scale;
+
+            if (followSmooth) {
+                smoothOffsetX += (targetX - smoothOffsetX) * CONFIG.followSpeed;
+                smoothOffsetY += (targetY - smoothOffsetY) * CONFIG.followSpeed;
+                offsetX = smoothOffsetX;
+                offsetY = smoothOffsetY;
+                if (Math.abs(smoothOffsetX - targetX) < 0.5 && Math.abs(smoothOffsetY - targetY) < 0.5) {
+                    followSmooth = false;
+                    offsetX = targetX;
+                    offsetY = targetY;
+                }
+            } else {
+                offsetX = targetX;
+                offsetY = targetY;
+            }
+        }
+
+        // ============================================================
+        // 6. ОТРИСОВКА
+        // ============================================================
+        function screenPos(worldX, worldY) {
+            return {
+                x: worldX * scale + W/2 + offsetX,
+                y: worldY * scale + H/2 + offsetY
+            };
+        }
+
+        function formatDate(d) {
+            const y = d.getUTCFullYear();
+            const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(d.getUTCDate()).padStart(2, '0');
+            const h = String(d.getUTCHours()).padStart(2, '0');
+            const min = String(d.getUTCMinutes()).padStart(2, '0');
+            const s = String(d.getUTCSeconds()).padStart(2, '0');
+            return `${y}.${m}.${day} ${h}:${min}:${s}`;
+        }
+
+        function updateHUD() {
+            const currentDate = new Date(startDate.getTime() + simTimeDays * 86400 * 1000);
+            hud.textContent = `${formatDate(currentDate)} | Скорость: ${timeScale}x`;
+        }
+
+        function drawOrbit(body, parentWorldPos) {
+            const a = body.aWorld !== undefined ? body.aWorld : (body.a * CONFIG.sunRadius);
+            const e = body.e;
+            const peri = body.peri || 0;
+            ctx.beginPath();
+            const steps = 200;
+            for (let i = 0; i <= steps; i++) {
+                const M = (i / steps) * 2 * Math.PI;
+                let E = M;
+                for (let j = 0; j < 10; j++) {
+                    const dE = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+                    E -= dE;
+                    if (Math.abs(dE) < 1e-8) break;
+                }
+                const r = a * (1 - e * Math.cos(E));
+                const cosV = (Math.cos(E) - e) / (1 - e * Math.cos(E));
+                const sinV = (Math.sqrt(1 - e*e) * Math.sin(E)) / (1 - e * Math.cos(E));
+                const V = Math.atan2(sinV, cosV);
+                const x0 = r * Math.cos(V);
+                const y0 = r * Math.sin(V);
+                const cosPeri = Math.cos(peri);
+                const sinPeri = Math.sin(peri);
+                const x = x0 * cosPeri - y0 * sinPeri;
+                const y = x0 * sinPeri + y0 * cosPeri;
+                const worldX = parentWorldPos.x + x;
+                const worldY = parentWorldPos.y + y;
+                const screen = screenPos(worldX, worldY);
+                if (i === 0) ctx.moveTo(screen.x, screen.y);
+                else ctx.lineTo(screen.x, screen.y);
+            }
+            ctx.strokeStyle = CONFIG.orbitColor;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        function drawGlow(screenX, screenY, color) {
+            const glowRadius = Math.min(CONFIG.maxGlowPx, CONFIG.minGlowPx / scale);
+            if (glowRadius <= 0) return;
+            const gradient = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, glowRadius);
+            gradient.addColorStop(0, color + 'cc');
+            gradient.addColorStop(1, color + '00');
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, glowRadius, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+        }
+
+        function drawBody(body, parentWorldPos) {
+            if (body.showOrbit !== false) {       // проверяем флаг
+                drawOrbit(body, parentWorldPos);
+            }    
+            const localPos = getLocalOrbitPos(body, simTimeDays);
+            const worldPos = {
+                x: parentWorldPos.x + localPos.x,
+                y: parentWorldPos.y + localPos.y
+            };
+            const screen = screenPos(worldPos.x, worldPos.y);
+            const radius = body.radius * scale;
+
+            drawGlow(screen.x, screen.y, body.color);
+
+            if (body.ring) {
+                const innerR = radius * body.ring.innerFactor;
+                const outerR = radius * body.ring.outerFactor;
+                ctx.beginPath();
+                // Внешняя окружность
+                ctx.arc(screen.x, screen.y, outerR, 0, Math.PI * 2);
+                // Внутренняя окружность (против часовой, чтобы получился бублик)
+                ctx.arc(screen.x, screen.y, innerR, 0, Math.PI * 2, true);
+                ctx.closePath();
+                // Преобразуем alpha в hex-строку для цвета
+                const alphaHex = Math.floor(body.ring.alpha * 255).toString(16).padStart(2, '0');
+                ctx.fillStyle = body.ring.color + alphaHex;
+                ctx.fill();
+            }
+
+            ctx.beginPath();
+            ctx.arc(screen.x, screen.y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = body.color;
+            ctx.fill();
+            ctx.shadowColor = body.color;
+            ctx.shadowBlur = Math.min(10, radius * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            let drawLabel = true;
+            if (body.parent) {
+                const parentScreen = screenPos(parentWorldPos.x, parentWorldPos.y);
+                const dist = Math.hypot(screen.x - parentScreen.x, screen.y - parentScreen.y);
+                if (dist < CONFIG.labelThreshold) {
+                    drawLabel = false;
+                }
+            }
+            if (drawLabel) {
+                ctx.fillStyle = CONFIG.labelColor;
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(body.nameRu, screen.x, screen.y - radius - 10);
+            }
+
+            body._screenX = screen.x;
+            body._screenY = screen.y;
+            body._radius = radius;
+
+            if (body.satellites) {
+                for (const sat of body.satellites) {
+                    drawBody(sat, worldPos);
+                }
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = CONFIG.bgColor;
+            const dpr = window.devicePixelRatio || 1;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.fillRect(0, 0, W, H);
+
+            // Солнце
+            const sunScreen = screenPos(0, 0);
+            const sunRadius = CONFIG.sunRadius * scale;
+            ctx.beginPath();
+            ctx.arc(sunScreen.x, sunScreen.y, sunRadius, 0, Math.PI * 2);
+            ctx.fillStyle = CONFIG.sunColor;
+            ctx.shadowColor = CONFIG.sunColor;
+            ctx.shadowBlur = 50;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Планеты
+            for (const body of CONFIG.planetData) {
+                drawBody(body, { x: 0, y: 0 });
+            }
+
+            // Пояс астероидов (вращается)
+            if (CONFIG.asteroidBelt.enabled) {
+                ctx.fillStyle = CONFIG.asteroidBelt.color;
+                const periodDays = CONFIG.asteroidBelt.periodDays || 1500;
+                const omega = 2 * Math.PI / periodDays;
+                for (const ast of asteroids) {
+                    const theta = ast.theta0 + omega * simTimeDays;
+                    const x = ast.r * Math.cos(theta);
+                    const y = ast.r * Math.sin(theta);
+                    const screen = screenPos(x, y);
+                    ctx.fillRect(screen.x, screen.y, 1, 1);
+                }
+            }
+        }
+
+        // ============================================================
+        // 7. ЗУМ
+        // ============================================================
+        function zoomAtPoint(factor, px, py) {
+            const oldScale = scale;
+            const newScale = Math.max(CONFIG.minScale, Math.min(CONFIG.maxScale, scale * factor));
+            
+            let zoomPointX = px;
+            let zoomPointY = py;
+            if (followActive && followTarget) {
+                const pos = getWorldPosByName(followTarget, simTimeDays);
+                if (pos) {
+                    zoomPointX = pos.x * oldScale + W/2 + offsetX;
+                    zoomPointY = pos.y * oldScale + H/2 + offsetY;
+                }
+            }
+            
+            const worldX = (zoomPointX - W/2 - offsetX) / oldScale;
+            const worldY = (zoomPointY - H/2 - offsetY) / oldScale;
+            
+            offsetX = zoomPointX - W/2 - worldX * newScale;
+            offsetY = zoomPointY - H/2 - worldY * newScale;
+            scale = newScale;
+            
+            if (followActive && followTarget) {
+                const pos = getWorldPosByName(followTarget, simTimeDays);
+                if (pos) {
+                    const targetX = -pos.x * scale;
+                    const targetY = -pos.y * scale;
+                    smoothTargetX = targetX;
+                    smoothTargetY = targetY;
+                    smoothOffsetX = offsetX;
+                    smoothOffsetY = offsetY;
+                    followSmooth = false;
+                }
+            }
+        }
+
+        // ============================================================
+        // 8. УПРАВЛЕНИЕ МЫШЬЮ
+        // ============================================================
+        canvas.addEventListener('mousemove', (e) => {
+            if (dragging) {
+                if (followActive) stopFollow();
+                const dx = e.clientX - dragStartX;
+                const dy = e.clientY - dragStartY;
+                offsetX += dx;
+                offsetY += dy;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+                return;
+            }
+            const rect = canvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+            let found = false;
+            function checkHover(arr) {
+                for (const p of arr) {
+                    if (p._screenX === undefined) continue;
+                    const dx = mx - p._screenX;
+                    const dy = my - p._screenY;
+                    const hitRadius = Math.max(p._radius + 5, 15);
+                    if (dx*dx + dy*dy < hitRadius * hitRadius) {
+                        canvas.classList.add('pointer');
+                        found = true;
+                        return true;
+                    }
+                    if (p.satellites) {
+                        if (checkHover(p.satellites)) return true;
+                    }
+                }
+                return false;
+            }
+            if (!checkHover(CONFIG.planetData)) canvas.classList.remove('pointer');
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.button === 0) {
+                dragging = true;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+                if (followActive) stopFollow();
+            }
+        });
+        window.addEventListener('mouseup', () => { dragging = false; });
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const delta = e.deltaY || e.deltaX;
+            const scaleStep = Math.abs(delta) < 50 ? 0.05 : 0.25;
+            const factor = delta < 0 ? 1 + scaleStep : 1 - scaleStep;
+            const px = e.clientX - rect.left;
+            const py = e.clientY - rect.top;
+            zoomAtPoint(factor, px, py);
+        }, { passive: false });
+
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+            let clickedAny = false;
+            function handleBodyClick(arr) {
+                for (const p of arr) {
+                    if (p._screenX === undefined) continue;
+                    const dx = mx - p._screenX;
+                    const dy = my - p._screenY;
+                    const hitRadius = Math.max(p._radius + 5, 15);
+                    if (dx*dx + dy*dy < hitRadius * hitRadius) {
+                        clickedAny = true;
+                        if (menuExcluded.includes(p.name)) {
+                            // Для исключённых объектов включаем слежение
+                            if (followActive && followTarget === p.name) {
+                                stopFollow();
+                            } else {
+                                startFollow(p.name);
+                            }
+                        } else {
+                            // Открываем меню и сразу включаем слежение
+                            showMenu(p);
+                            if (!followActive || followTarget !== p.name) {
+                                startFollow(p.name);
+                            }
+                        }
+                        return true;
+                    }
+                    if (p.satellites) {
+                        if (handleBodyClick(p.satellites)) return true;
+                    }
+                }
+                return false;
+            }
+            if (!handleBodyClick(CONFIG.planetData)) {
+                // Клик по пустому месту
+                hideMenu();
+                if (followActive) {
+                    stopFollow();
+                }
+            }
+        });
+
+        // ============================================================
+        // 9. СЕНСОРНОЕ УПРАВЛЕНИЕ
+        // ============================================================
+        let lastTouchX = 0, lastTouchY = 0;
+        let lastPinchDist = 0;
+        let isTouching = false;
+        let touchesCount = 0;
+        let touchStartX = 0, touchStartY = 0;
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touches = e.touches;
+            touchesCount = touches.length;
+            if (touchesCount === 1) {
+                const t = touches[0];
+                lastTouchX = t.clientX;
+                lastTouchY = t.clientY;
+                touchStartX = t.clientX;
+                touchStartY = t.clientY;
+                dragStartX = t.clientX;
+                dragStartY = t.clientY;
+                isTouching = true;
+                dragging = false;
+                if (followActive) stopFollow();
+                lastPinchDist = 0;
+            } else if (touchesCount === 2) {
+                const t1 = touches[0];
+                const t2 = touches[1];
+                const dx = t1.clientX - t2.clientX;
+                const dy = t1.clientY - t2.clientY;
+                lastPinchDist = Math.sqrt(dx*dx + dy*dy);
+                isTouching = true;
+                dragging = false;
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touches = e.touches;
+            const count = touches.length;
+            if (count === 1) {
+                const t = touches[0];
+                if (lastPinchDist > 0) {
+                    lastTouchX = t.clientX;
+                    lastTouchY = t.clientY;
+                    lastPinchDist = 0;
+                }
+                const dx = t.clientX - lastTouchX;
+                const dy = t.clientY - lastTouchY;
+                if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+                    dragging = true;
+                    offsetX += dx;
+                    offsetY += dy;
+                }
+                lastTouchX = t.clientX;
+                lastTouchY = t.clientY;
+                lastPinchDist = 0;
+            } else if (count === 2) {
+                const t1 = touches[0];
+                const t2 = touches[1];
+                const dx = t1.clientX - t2.clientX;
+                const dy = t1.clientY - t2.clientY;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (lastPinchDist > 0) {
+                    let factor = dist / lastPinchDist;
+                    factor = Math.max(0.8, Math.min(1.25, factor));
+                    const rect = canvas.getBoundingClientRect();
+                    const px = (t1.clientX + t2.clientX) / 2 - rect.left;
+                    const py = (t1.clientY + t2.clientY) / 2 - rect.top;
+                    zoomAtPoint(factor, px, py);
+                }
+                lastPinchDist = dist;
+                dragging = false;
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (e.touches.length === 0) {
+                if (isTouching && touchesCount === 1) {
+                    const dist = Math.hypot(touchStartX - lastTouchX, touchStartY - lastTouchY);
+                    if (dist < 10) {
+                        const rect = canvas.getBoundingClientRect();
+                        const mx = touchStartX - rect.left;
+                        const my = touchStartY - rect.top;
+                        function handleTap(arr) {
+                            for (const p of arr) {
+                                if (p._screenX === undefined) continue;
+                                const dx = mx - p._screenX;
+                                const dy = my - p._screenY;
+                                const hitRadius = Math.max(p._radius + 5, 20);
+                                if (dx*dx + dy*dy < hitRadius * hitRadius) {
+                                    if (menuExcluded.includes(p.name)) {
+                                        if (followActive && followTarget === p.name) {
+                                            stopFollow();
+                                        } else {
+                                            startFollow(p.name);
+                                        }
+                                    } else {
+                                        showMenu(p);
+                                        if (!followActive || followTarget !== p.name) {
+                                            startFollow(p.name);
+                                        }
+                                    }
+                                    return true;
+                                }
+                                if (p.satellites) {
+                                    if (handleTap(p.satellites)) return true;
+                                }
+                            }
+                            return false;
+                        }
+                        if (!handleTap(CONFIG.planetData)) {
+                            hideMenu();
+                            if (followActive) {
+                                stopFollow();
+                            }
+                        }
+                    }
+                }
+            }  
+            isTouching = false;
+            dragging = false;
+            lastPinchDist = 0;
+            touchesCount = 0;
+        }, { passive: false });          
+
+        // ============================================================
+        // 10. УПРАВЛЕНИЕ СКОРОСТЬЮ ВРЕМЕНИ
+        // ============================================================
+        /*window.addEventListener('keydown', (e) => {
+            if (e.key === '+' || e.key === '=') {
+                e.preventDefault();
+                if (timeScaleIndex < CONFIG.timeScales.length - 1) {
+                    timeScaleIndex++;
+                    timeScale = CONFIG.timeScales[timeScaleIndex];
+                    console.log(`Скорость времени: ${timeScale}x`);
+                }
+            } else if (e.key === '-' || e.key === '_') {
+                e.preventDefault();
+                if (timeScaleIndex > 0) {
+                    timeScaleIndex--;
+                    timeScale = CONFIG.timeScales[timeScaleIndex];
+                    console.log(`Скорость времени: ${timeScale}x`);
+                }
+            }
+        });*/
+
+        // ============================================================
+        // 11. ГЛАВНЫЙ ЦИКЛ
+        // ============================================================
+        function animate(timestamp) {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const deltaMs = timestamp - lastTimestamp;
+            lastTimestamp = timestamp;
+
+            const deltaSeconds = deltaMs / 1000;
+            simTimeDays += (deltaSeconds * timeScale) / 86400;
+
+            if (followActive) updateFollow();
+            draw();
+            updateHUD();
+
+            requestAnimationFrame(animate);
+        }
+
+        // ============================================================
+        // 12. СОХРАНЕНИЕ И ВОССТАНОВЛЕНИЕ СОСТОЯНИЯ
+        // ============================================================
+        function saveState() {
+            try {
+                const state = {
+                    simTimeDays: simTimeDays,
+                    scale: scale,
+                    offsetX: offsetX,
+                    offsetY: offsetY,
+                    timeScaleIndex: timeScaleIndex,
+                    followTarget: followActive ? followTarget : null,
+                    followActive: followActive
+                };
+                localStorage.setItem('expanse_map_state', JSON.stringify(state));
+            } catch (e) {
+                // localStorage может быть недоступен — игнорируем
+            }
+        }
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('expanse_map_state');
+                if (!saved) return;
+                const state = JSON.parse(saved);
+                if (typeof state.simTimeDays === 'number') simTimeDays = state.simTimeDays;
+                if (typeof state.scale === 'number') scale = state.scale;
+                if (typeof state.offsetX === 'number') offsetX = state.offsetX;
+                if (typeof state.offsetY === 'number') offsetY = state.offsetY;
+                if (typeof state.timeScaleIndex === 'number' && state.timeScaleIndex >= 0 && state.timeScaleIndex < CONFIG.timeScales.length) {
+                    timeScaleIndex = state.timeScaleIndex;
+                    timeScale = CONFIG.timeScales[timeScaleIndex];
+                }
+                if (state.followActive && state.followTarget) {
+                    startFollow(state.followTarget);
+                    // Жёстко переходим к цели без плавного подъезда
+                    followSmooth = false;
+                    updateFollow();
+                }
+            } catch (e) {
+                // Ошибка при восстановлении — игнорируем
+            }
+        }
+
+        // Вызываем восстановление при старте
+        loadState();
+
+        // Сохраняем состояние каждые 3 секунды
+        setInterval(saveState, 3000);
+
+        // Сохраняем при закрытии страницы
+        window.addEventListener('beforeunload', saveState);
+
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>
