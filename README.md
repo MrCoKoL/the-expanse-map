@@ -52,7 +52,7 @@ JavaScript (ES6+)
 ➕ Как добавить свою планету или спутник
 Все объекты находятся в массиве CONFIG.planetData в файле index.html.
 Пример добавления планеты:
-
+```javascript
 {
     name: "Neptune",
     nameRu: "Нептун",
@@ -67,7 +67,7 @@ JavaScript (ES6+)
     link: "https://example.com",
     satellites: [ ... ]
 }
-
+```
 Для спутников используйте aWorld (расстояние в мировых единицах) и periodDays (реальный орбитальный период в днях).
 
 
