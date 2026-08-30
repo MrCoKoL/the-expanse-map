@@ -1,9 +1,7 @@
-// server.js
-// Простой сервер игрового времени для The Expanse Map
-
-const START_DATE = Date.UTC(2350, 0, 1); // 2350-01-01 UTC в миллисекундах
-let timeScale = 60;      // Скорость: 60 игровых секунд за 1 реальную секунду
-let simTimeDays = 0;     // Игровое время в днях с начала
+// server.ts
+const START_DATE = Date.UTC(2350, 0, 1);
+let timeScale = 60;
+let simTimeDays = 0;
 let lastUpdate = Date.now();
 
 function updateTime() {
@@ -13,10 +11,9 @@ function updateTime() {
     lastUpdate = now;
 }
 
-// Обновляем время каждую секунду
 setInterval(updateTime, 1000);
 
-function handleRequest(req) {
+function handleRequest(req: Request): Response {
     const url = new URL(req.url);
 
     const headers = new Headers({
@@ -46,7 +43,7 @@ function handleRequest(req) {
             return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers });
         }
 
-        return req.json().then((body) => {
+        return req.json().then((body: any) => {
             const newScale = Number(body.timeScale);
             if (newScale > 0 && newScale < 1000000) {
                 timeScale = newScale;
@@ -60,4 +57,5 @@ function handleRequest(req) {
     return new Response("Not found", { status: 404, headers });
 }
 
-Deno.serve(handleRequest);
+// Экспортируем для Deno Deploy (или можно Deno.serve(handleRequest))
+export default { fetch: handleRequest };
