@@ -1,4 +1,3 @@
-// server.ts
 const START_DATE = Date.UTC(2350, 0, 1);
 let timeScale = 60;
 let simTimeDays = 0;
@@ -13,7 +12,7 @@ function updateTime() {
 
 setInterval(updateTime, 1000);
 
-function handleRequest(req: Request): Response {
+function handleRequest(req) {
     const url = new URL(req.url);
 
     const headers = new Headers({
@@ -43,7 +42,7 @@ function handleRequest(req: Request): Response {
             return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers });
         }
 
-        return req.json().then((body: any) => {
+        return req.json().then((body) => {
             const newScale = Number(body.timeScale);
             if (newScale > 0 && newScale < 1000000) {
                 timeScale = newScale;
@@ -57,5 +56,4 @@ function handleRequest(req: Request): Response {
     return new Response("Not found", { status: 404, headers });
 }
 
-// Экспортируем для Deno Deploy (или можно Deno.serve(handleRequest))
 export default { fetch: handleRequest };
