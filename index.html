@@ -513,6 +513,8 @@
         let timeScaleIndex = 1;                  // Индекс текущей скорости (1 = 60x) / Current time scale index
         let timeScale = CONFIG.timeScales[timeScaleIndex]; // Множитель скорости / Speed multiplier
         let lastTimestamp = 0;                   // Последняя метка времени для delta / Last timestamp for delta
+        const SERVER_URL = "https://the-expanse-map.mrcokol.deno.net/"; // замени на свой URL
+        let lastServerSync = 0;
 
         // --- ИНФОРМАЦИОННОЕ МЕНЮ / INFO MENU ---
         const infoMenu = document.getElementById('info-menu');
@@ -1196,7 +1198,7 @@
             lastTimestamp = timestamp;
 
             const deltaSeconds = deltaMs / 1000;
-            simTimeDays += (deltaSeconds * timeScale) / 86400; // Обновление игрового времени / Update simulation time
+            //simTimeDays += (deltaSeconds * timeScale) / 86400; // Обновление игрового времени / Update simulation time
 
             if (followActive) updateFollow();
             draw();
@@ -1204,6 +1206,33 @@
 
             requestAnimationFrame(animate);
         }
+
+
+        async function syncTimeWithServer() {
+            try {
+                const response = await fetch(`${SERVER_URL}/time`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                if (typeof data.simTimeDays === 'number') {
+                    simTimeDays = data.simTimeDays;
+                }
+                if (typeof data.timeScale === 'number') {
+                    timeScale = data.timeScale;
+                    // Обновляем HUD скорость
+                    updateHUD();
+                }
+            } catch (err) {
+                console.warn('Ошибка синхронизации времени с сервером:', err);
+                // Можно продолжать использовать локальное время (если оно было)
+            }
+        }
+
+        // Запускаем синхронизацию при старте
+        syncTimeWithServer();
+
+        // Обновляемся каждые 2 секунды
+        setInterval(syncTimeWithServer, 2000);
+
 
         // ============================================================
         // 12. СОХРАНЕНИЕ И ВОССТАНОВЛЕНИЕ СОСТОЯНИЯ / SAVE & RESTORE STATE
