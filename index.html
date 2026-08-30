@@ -515,6 +515,7 @@
         let lastTimestamp = 0;                   // Последняя метка времени для delta / Last timestamp for delta
         const SERVER_URL = "https://the-expanse-map.mrcokol.deno.net"; // замени на свой URL
         let lastServerSync = 0;
+        let serverTargetTime = null;
 
         // --- ИНФОРМАЦИОННОЕ МЕНЮ / INFO MENU ---
         const infoMenu = document.getElementById('info-menu');
@@ -1198,7 +1199,17 @@
             lastTimestamp = timestamp;
 
             const deltaSeconds = deltaMs / 1000;
-            //simTimeDays += (deltaSeconds * timeScale) / 86400; // Обновление игрового времени / Update simulation time
+            simTimeDays += (deltaSeconds * timeScale) / 86400; // Обновление игрового времени / Update simulation time
+
+            if (serverTargetTime !== null) {
+                // Плавно подтягиваем локальное время к серверному
+                const diff = serverTargetTime - simTimeDays;
+                simTimeDays += diff * 0.1; // коэффициент сглаживания (можно подобрать)
+                if (Math.abs(diff) < 0.0001) {
+                    simTimeDays = serverTargetTime;
+                    serverTargetTime = null;
+                }
+            }
 
             if (followActive) updateFollow();
             draw();
@@ -1228,7 +1239,22 @@
         }
 
         // Запускаем синхронизацию при старте
-        syncTimeWithServer();
+        async function syncTimeWithServer() {
+            try {
+                const response = await fetch(`${SERVER_URL}/time`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                if (typeof data.simTimeDays === 'number') {
+                    serverTargetTime = data.simTimeDays; // запоминаем цель
+                }
+                if (typeof data.timeScale === 'number') {
+                    timeScale = data.timeScale;
+                    updateHUD();
+                }
+            } catch (err) {
+                console.warn('Ошибка синхронизации времени с сервером:', err);
+            }
+        }
 
         // Обновляемся каждые 2 секунды
         setInterval(syncTimeWithServer, 2000);
