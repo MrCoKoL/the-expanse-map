@@ -78,36 +78,43 @@
     <script>
         // ============================================================
         // 1. КОНФИГУРАЦИЯ (планеты, спутники, свечение, пояс астероидов)
+        // CONFIGURATION (planets, satellites, glow, asteroid belt)
         // ============================================================
         const CONFIG = {
-            sunRadius: 20,
-            minGlowPx: 1,
-            maxGlowPx: 8,
-            labelThreshold: 30,
+            sunRadius: 20, // Радиус Солнца в мировых единицах / Sun radius in world units
+            minGlowPx: 1,  // Минимальный радиус свечения при сильном приближении (px) / Minimum glow radius when zoomed in (px)
+            maxGlowPx: 8,  // Максимальный радиус свечения при отдалении (px) / Maximum glow radius when zoomed out (px)
+            labelThreshold: 30, // Порог скрытия подписи спутника рядом с родителем (px) / Threshold to hide satellite label near parent (px)
             asteroidBelt: {
                 enabled: true,
-                innerRadius: 2.2 * 214.8,
-                outerRadius: 3.2 * 214.8,
-                count: 2000,
-                color: "#8a8f98",
-                periodDays: 1500          // период обращения всего пояса
+                innerRadius: 2.2 * 214.8, // Внутренний радиус пояса в мировых единицах / Inner belt radius in world units
+                outerRadius: 3.2 * 214.8, // Внешний радиус пояса / Outer belt radius
+                count: 2000,             // Количество астероидов / Number of asteroids
+                color: "#8a8f98",        // Цвет точек пояса / Asteroid belt color
+                periodDays: 1500         // Период обращения всего пояса (в днях) / Rotation period of entire belt (in days)
             },
             planetData: [
+                // ============================================================
+                // МЕРКУРИЙ / MERCURY
+                // ============================================================
                 {
                     name: "Mercury",
                     nameRu: "Меркурий",
-                    a: 83,
-                    e: 0.2056,
-                    peri: 29.124 * Math.PI / 180,
-                    radius: 0.8,
-                    color: "#ada8a5",
-                    angle: 0.1,
-                    periodDays: 87.969
+                    a: 83,                    // Большая полуось (в единицах, где Солнце = 20) / Semi-major axis (in units where Sun = 20)
+                    e: 0.2056,                // Эксцентриситет орбиты / Orbital eccentricity
+                    peri: 29.124 * Math.PI / 180, // Аргумент перигелия (радианы) / Argument of perihelion (radians)
+                    radius: 0.8,              // Визуальный радиус (условный) / Visual radius (arbitrary)
+                    color: "#ada8a5",         // Цвет планеты / Planet color
+                    angle: 0.1,               // Начальная фаза (радианы) / Initial phase (radians)
+                    periodDays: 87.969        // Период обращения (дни) / Orbital period (days)
                 },
+                // ============================================================
+                // ВЕНЕРА / VENUS
+                // ============================================================
                 {
                     name: "Venus",
                     nameRu: "Венера",
-                    a: 155,
+                    a: 155,                    // Большая полуось / Semi-major axis
                     e: 0.0068,
                     peri: 54.85 * Math.PI / 180,
                     radius: 1.8,
@@ -115,10 +122,13 @@
                     angle: 0.5,
                     periodDays: 224.701
                 },
+                // ============================================================
+                // ЗЕМЛЯ И ЕЁ СПУТНИКИ / EARTH AND ITS SATELLITES
+                // ============================================================
                 {
                     name: "Earth",
                     nameRu: "Земля",
-                    a: 214.8,
+                    a: 214.8,                  // Большая полуось / Semi-major axis
                     e: 0.0167,
                     peri: 102.9 * Math.PI / 180,
                     radius: 2.0,
@@ -131,7 +141,7 @@
                         {
                             name: "Moon",
                             nameRu: "Луна",
-                            aWorld: 11.04,
+                            aWorld: 11.04,      // Расстояние в мировых единицах / Distance in world units
                             e: 0.0549,
                             peri: 318.15 * Math.PI / 180,
                             radius: 0.5,
@@ -144,7 +154,7 @@
                                 {
                                     name: "BushShipyards",
                                     nameRu: "Верфи Буша",
-                                    aWorld: 1.5,
+                                    aWorld: 1.5,   // Расстояние от центра Луны / Distance from Moon's center
                                     e: 0.0,
                                     peri: 0,
                                     radius: 0.02,
@@ -158,6 +168,9 @@
                         }
                     ]
                 },
+                // ============================================================
+                // МАРС И ЕГО СПУТНИКИ / MARS AND ITS SATELLITES
+                // ============================================================
                 {
                     name: "Mars",
                     nameRu: "Марс",
@@ -199,24 +212,30 @@
                         }
                     ]
                 },
+                // ============================================================
+                // ЦЕРЕРА (КАРЛИКОВАЯ ПЛАНЕТА) / CERES (DWARF PLANET)
+                // ============================================================
                 {
                     name: "Ceres",
                     nameRu: "Церера",
-                    a: 595.0,                  // 2.77 а.е. * 214.8
+                    a: 595.0,                 // Большая полуось / Semi-major axis
                     e: 0.0758,
                     peri: 0,
                     radius: 0.25,
                     color: "#b0b0b0",
                     angle: 1.2,
                     periodDays: 1681.63,
-                    showOrbit: false,
+                    showOrbit: false,          // Скрыть линию орбиты / Hide orbit line
                     description: "«Церера» является главным космопортом Пояса, на ней проживает около шести миллионов жителей и постоянно пребывает миллион посетителей.",
                     link: "https://t.me/c/3293763829/86"
                 },
+                // ============================================================
+                // ВЕСТА / VESTA
+                // ============================================================
                 {
                     name: "Vesta",
                     nameRu: "Веста",
-                    a: 507.0,                  // 2.36 а.е.
+                    a: 507.0,
                     e: 0.0894,
                     peri: 0,
                     radius: 0.15,
@@ -227,10 +246,13 @@
                     description: "Вестанские верфи, одна из крупнейших кораблестроительных и ремонтных верфей Пояса.",
                     link: "https://t.me/c/3293763829/113"
                 },
+                // ============================================================
+                // ПАЛЛАДА / PALLAS
+                // ============================================================
                 {
                     name: "Pallas",
                     nameRu: "Паллада",
-                    a: 595.0,                  // 2.77 а.е.
+                    a: 595.0,
                     e: 0.231,
                     peri: 0,
                     radius: 0.15,
@@ -241,10 +263,13 @@
                     description: "Станция Паллада, известна своими экстремистскими группировками астеров, отколовшимися от колонии.",
                     link: "https://t.me/c/3293763829/78"
                 },
+                // ============================================================
+                // ГИГЕЯ / HYGIEA
+                // ============================================================
                 {
                     name: "Hygiea",
                     nameRu: "Гигея",
-                    a: 674.0,                  // 3.14 а.е.
+                    a: 674.0,
                     e: 0.117,
                     peri: 0,
                     radius: 0.12,
@@ -253,26 +278,32 @@
                     periodDays: 2031.6,
                     showOrbit: false,
                     description: "Гигея сформировалась как промышленный узел, специализирующийся на добыче и переработке полезных ископаемых, особенно никеля и железа.",
-                    lind: "https://t.me/c/3293763829/118"
+                    lind: "https://t.me/c/3293763829/118"  // Опечатка: должно быть link, но не изменяем код / Typo: should be link, but not changing code
                 },
+                // ============================================================
+                // ТИХО (СТАНЦИЯ) / TYCHO (STATION)
+                // ============================================================
                 {
                     name: "Tycho",
                     nameRu: "Тихо",
-                    a: 601.0,                  // примерное 2.8 а.е.
+                    a: 601.0,
                     e: 0.05,
                     peri: 0,
                     radius: 0.1,
-                    color: "#d0d0d0",          // серебристый
+                    color: "#d0d0d0",
                     angle: 5.2,
-                    periodDays: 1680,         // примерно 4.6 года
+                    periodDays: 1680,
                     showOrbit: false,
                     description: "Станция Тихо является единственной верфью в Солнечной системе, которая имеет возможности и мощности для строительства более крупных судов, чем верфи Буша на Луне.",
                     link: "https://t.me/c/3293763829/93"
                 },
+                // ============================================================
+                // ЭРОС / EROS
+                // ============================================================
                 {
                     name: "Eros",
                     nameRu: "Эрос",
-                    a: 313.0,                  // 1.458 а.е. (ближе к Марсу, но оставим реальное значение)
+                    a: 313.0,
                     e: 0.2229,
                     peri: 0,
                     radius: 0.1,
@@ -283,21 +314,24 @@
                     description: "На Эросе корабль может ждать неделями или месяцами, не мешая движению других судов. Если команде нужно место, где можно расслабиться, размяться, ненадолго отдохнуть друг от друга, они отправлялись на «Эрос».",
                     link: "https://t.me/c/3293763829/100"
                 },
+                // ============================================================
+                // ЮПИТЕР И ЕГО СПУТНИКИ / JUPITER AND ITS MOONS
+                // ============================================================
                 {
                     name: "Jupiter",
                     nameRu: "Юпитер",
-                    a: 5.2 * 214.8,          // ≈ 1117.0 (реальная большая полуось)
+                    a: 5.2 * 214.8,          // Большая полуось / Semi-major axis
                     e: 0.0489,
                     peri: 14.75 * Math.PI / 180,
-                    radius: 8.0,             // визуальный радиус (больше Земли, но не слишком огромный)
-                    color: "#d8a06a",        // оранжево-коричневый
+                    radius: 8.0,
+                    color: "#d8a06a",
                     angle: 2.2,
-                    periodDays: 4332.59,     // ~11.86 лет
+                    periodDays: 4332.59,
                     satellites: [
                         {
                             name: "Io",
                             nameRu: "Ио",
-                            aWorld: 47.2,      // 8.0 * 5.9 (реальное расстояние в радиусах Юпитера)
+                            aWorld: 47.2,      // 8.0 * 5.9 (в радиусах Юпитера) / (in Jupiter radii)
                             e: 0.0041,
                             peri: 10,
                             radius: 0.5,
@@ -310,7 +344,7 @@
                         {
                             name: "Europa",
                             nameRu: "Европа",
-                            aWorld: 75.2,      // 8.0 * 9.4
+                            aWorld: 75.2,
                             e: 0.0094,
                             peri: 110,
                             radius: 0.45,
@@ -323,7 +357,7 @@
                         {
                             name: "Ganymede",
                             nameRu: "Ганимед",
-                            aWorld: 120.0,     // 8.0 * 15.0
+                            aWorld: 120.0,
                             e: 0.0013,
                             peri: 87,
                             radius: 0.7,
@@ -336,7 +370,7 @@
                         {
                             name: "Callisto",
                             nameRu: "Каллисто",
-                            aWorld: 210.4,     // 8.0 * 26.3
+                            aWorld: 210.4,
                             e: 0.0074,
                             peri: 276,
                             radius: 0.65,
@@ -348,27 +382,30 @@
                         }
                     ]
                 },
+                // ============================================================
+                // САТУРН И ЕГО СПУТНИКИ / SATURN AND ITS MOONS
+                // ============================================================
                 {
                     name: "Saturn",
                     nameRu: "Сатурн",
-                    a: 9.58 * 214.8,         // ≈ 2057.9 (реальная большая полуось)
+                    a: 9.58 * 214.8,         // Большая полуось / Semi-major axis
                     e: 0.0565,
                     peri: 30 * Math.PI / 180,
-                    radius: 7.0,             // визуальный радиус (меньше Юпитера)
-                    color: "#e0c080",        // золотисто-жёлтый
+                    radius: 7.0,
+                    color: "#e0c080",
                     angle: 4.0,
-                    periodDays: 10759.22,    // ~29.45 лет
-                    ring: {                        // ← добавить это
-                        innerFactor: 1.3,         // внутренний радиус кольца (в радиусах планеты)
-                        outerFactor: 2.3,         // внешний радиус кольца
-                        color: "#d0c8a0",         // цвет кольца
-                        alpha: 0.35               // прозрачность (0..1)
-                    },    
+                    periodDays: 10759.22,
+                    ring: {                   // Параметры кольца / Ring parameters
+                        innerFactor: 1.3,     // Внутренний радиус (в радиусах планеты) / Inner radius (in planet radii)
+                        outerFactor: 2.3,     // Внешний радиус / Outer radius
+                        color: "#d0c8a0",
+                        alpha: 0.35           // Прозрачность / Transparency
+                    },
                     satellites: [
                         {
                             name: "Enceladus",
                             nameRu: "Энцелад",
-                            aWorld: 28.6,      // 7.0 * 4.08
+                            aWorld: 28.6,
                             e: 0.0047,
                             peri: 15 * Math.PI / 180,
                             radius: 0.15,
@@ -381,7 +418,7 @@
                         {
                             name: "Rhea",
                             nameRu: "Рея",
-                            aWorld: 63.4,      // 7.0 * 9.05
+                            aWorld: 63.4,
                             e: 0.001,
                             peri: 40 * Math.PI / 180,
                             radius: 0.2,
@@ -394,7 +431,7 @@
                         {
                             name: "Titan",
                             nameRu: "Титан",
-                            aWorld: 146.9,     // 7.0 * 20.98
+                            aWorld: 146.9,
                             e: 0.0288,
                             peri: 70 * Math.PI / 180,
                             radius: 0.5,
@@ -407,7 +444,7 @@
                         {
                             name: "Iapetus",
                             nameRu: "Япет",
-                            aWorld: 428.0,     // 7.0 * 61.15
+                            aWorld: 428.0,
                             e: 0.0286,
                             peri: 100 * Math.PI / 180,
                             radius: 0.35,
@@ -420,25 +457,26 @@
                     ]
                 }
             ],
-            initialScale: 0.06,            // изменено для видимости пояса
-            minScale: 0.002,
-            maxScale: 500,
-            bgColor: "#0b0e14",
-            sunColor: "#fccf66",
-            orbitColor: "#2a3a4a",
-            labelColor: "#8898a8",
-            followSpeed: 0.06,
-            timeScales: [1, 60, 3600, 86400, 2592000]
+            initialScale: 0.06,            // Начальный масштаб / Initial zoom scale
+            minScale: 0.002,               // Минимальный масштаб / Minimum zoom
+            maxScale: 500,                 // Максимальный масштаб / Maximum zoom
+            bgColor: "#0b0e14",            // Цвет фона / Background color
+            sunColor: "#fccf66",           // Цвет Солнца / Sun color
+            orbitColor: "#2a3a4a",         // Цвет орбит / Orbit line color
+            labelColor: "#8898a8",         // Цвет подписей / Label color
+            followSpeed: 0.06,             // Скорость сглаживания слежения / Follow smoothing speed
+            timeScales: [1, 60, 3600, 86400, 2592000] // Множители скорости времени / Time scale factors
         };
 
         // ============================================================
-        // 2. ИНИЦИАЛИЗАЦИЯ
+        // 2. ИНИЦИАЛИЗАЦИЯ / INITIALIZATION
         // ============================================================
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const hud = document.getElementById('hud');
 
         let W, H;
+        // Функция изменения размера холста с учётом devicePixelRatio / Resize canvas with devicePixelRatio
         function resize() {
             const dpr = window.devicePixelRatio || 1;
             W = window.innerWidth;
@@ -453,34 +491,37 @@
         resize();
 
         // ============================================================
-        // 3. ПЕРЕМЕННЫЕ СОСТОЯНИЯ
+        // 3. ПЕРЕМЕННЫЕ СОСТОЯНИЯ / STATE VARIABLES
         // ============================================================
-        let scale = CONFIG.initialScale;
-        let offsetX = 0, offsetY = 0;
+        let scale = CONFIG.initialScale;          // Текущий масштаб / Current scale
+        let offsetX = 0, offsetY = 0;             // Смещение камеры / Camera offset
 
+        // Переменные слежения / Follow variables
         let followTarget = null;
         let followActive = false;
         let followSmooth = false;
         let smoothOffsetX = 0, smoothOffsetY = 0;
         let smoothTargetX = 0, smoothTargetY = 0;
 
+        // Перетаскивание / Dragging
         let dragging = false;
         let dragStartX = 0, dragStartY = 0;
 
-        // --- ВРЕМЯ ---
-        const startDate = new Date(Date.UTC(2350, 0, 1, 0, 0, 0));
-        let simTimeDays = 0;
-        let timeScaleIndex = 1;
-        let timeScale = CONFIG.timeScales[timeScaleIndex];
-        let lastTimestamp = 0;
+        // --- ВРЕМЯ / TIME ---
+        const startDate = new Date(Date.UTC(2350, 0, 1, 0, 0, 0)); // Стартовая дата: 2350-01-01 UTC
+        let simTimeDays = 0;                     // Игровое время в днях / Simulation time in days
+        let timeScaleIndex = 1;                  // Индекс текущей скорости (1 = 60x) / Current time scale index
+        let timeScale = CONFIG.timeScales[timeScaleIndex]; // Множитель скорости / Speed multiplier
+        let lastTimestamp = 0;                   // Последняя метка времени для delta / Last timestamp for delta
 
-        // --- Меню ---
+        // --- ИНФОРМАЦИОННОЕ МЕНЮ / INFO MENU ---
         const infoMenu = document.getElementById('info-menu');
         const menuGoBtn = document.getElementById('menu-go-btn');
         const menuDescription = document.getElementById('menu-description');
-        let menuTarget = null;
-        const menuExcluded = ['Jupiter', 'Saturn', 'Mercury', 'Venus'];
+        let menuTarget = null;                   // Объект, для которого открыто меню / Object for which menu is open
+        const menuExcluded = ['Jupiter', 'Saturn', 'Mercury', 'Venus']; // Планеты без меню / Planets excluded from menu
 
+        // Показать меню / Show menu
         function showMenu(body) {
             menuTarget = body;
             menuDescription.textContent = body.description || 'Описание отсутствует';
@@ -493,38 +534,42 @@
             }
         }
 
+        // Скрыть меню / Hide menu
         function hideMenu() {
             infoMenu.style.display = 'none';
             menuTarget = null;
         };
 
-        // --- АСТЕРОИДЫ ---
+        // --- АСТЕРОИДЫ / ASTEROIDS ---
         let asteroids = [];
+        // Генерация пояса астероидов / Generate asteroid belt
         function generateAsteroidBelt() {
             asteroids = [];
             const { innerRadius, outerRadius, count } = CONFIG.asteroidBelt;
-            const scaleFactor = CONFIG.sunRadius;
+            const scaleFactor = CONFIG.sunRadius; // Масштаб для перевода в мировые единицы / Scale to world units
             for (let i = 0; i < count; i++) {
                 const r = (innerRadius + Math.random() * (outerRadius - innerRadius)) * scaleFactor;
                 const theta0 = Math.random() * 2 * Math.PI;
                 asteroids.push({
-                    r: r,
-                    theta0: theta0
+                    r: r,            // Радиус от Солнца / Distance from Sun
+                    theta0: theta0    // Начальный угол / Initial angle
                 });
             }
         }
         generateAsteroidBelt();
 
         // ============================================================
-        // 4. ОРБИТАЛЬНАЯ МЕХАНИКА
+        // 4. ОРБИТАЛЬНАЯ МЕХАНИКА / ORBITAL MECHANICS
         // ============================================================
+        // Вычисление позиции тела относительно его центра (Солнца или родителя) / Calculate local position relative to its center (Sun or parent)
         function getLocalOrbitPos(body, tDays) {
-            const a = body.aWorld !== undefined ? body.aWorld : (body.a * CONFIG.sunRadius);
+            const a = body.aWorld !== undefined ? body.aWorld : (body.a * CONFIG.sunRadius); // Большая полуось / Semi-major axis
             const e = body.e;
             const peri = body.peri || 0;
-            const n = 2 * Math.PI / body.periodDays;
-            const M = body.angle + n * tDays;
+            const n = 2 * Math.PI / body.periodDays; // Средняя угловая скорость / Mean angular velocity
+            const M = body.angle + n * tDays;        // Средняя аномалия / Mean anomaly
 
+            // Решение уравнения Кеплера методом Ньютона / Solve Kepler's equation via Newton's method
             let E = M;
             for (let i = 0; i < 10; i++) {
                 const dE = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
@@ -533,8 +578,8 @@
             }
             const cosV = (Math.cos(E) - e) / (1 - e * Math.cos(E));
             const sinV = (Math.sqrt(1 - e*e) * Math.sin(E)) / (1 - e * Math.cos(E));
-            const V = Math.atan2(sinV, cosV);
-            const r = a * (1 - e * Math.cos(E));
+            const V = Math.atan2(sinV, cosV); // Истинная аномалия / True anomaly
+            const r = a * (1 - e * Math.cos(E)); // Радиус / Radius
             const x0 = r * Math.cos(V);
             const y0 = r * Math.sin(V);
             const cosPeri = Math.cos(peri);
@@ -545,6 +590,7 @@
             };
         }
 
+        // Установка ссылок на родителей / Set parent references
         function setParents(arr, parent = null) {
             for (const body of arr) {
                 body.parent = parent;
@@ -553,6 +599,7 @@
         }
         setParents(CONFIG.planetData);
 
+        // Получение мировой позиции тела / Get world position
         function getWorldPos(body, tDays) {
             if (!body.parent) return getLocalOrbitPos(body, tDays);
             const parentPos = getWorldPos(body.parent, tDays);
@@ -563,6 +610,7 @@
             };
         }
 
+        // Получение мировой позиции по имени / Get world position by name
         function getWorldPosByName(name, tDays) {
             function findInArray(arr) {
                 for (const body of arr) {
@@ -580,8 +628,9 @@
         }
 
         // ============================================================
-        // 5. МОДУЛЬ СЛЕЖЕНИЯ
+        // 5. МОДУЛЬ СЛЕЖЕНИЯ / FOLLOW MODULE
         // ============================================================
+        // Запустить слежение за объектом / Start following an object
         function startFollow(planetName) {
             followTarget = planetName;
             followActive = true;
@@ -595,12 +644,14 @@
             }
         }
 
+        // Остановить слежение / Stop following
         function stopFollow() {
             followActive = false;
             followTarget = null;
             followSmooth = false;
         }
 
+        // Обновление слежения / Update follow
         function updateFollow() {
             if (!followActive || !followTarget) return;
             const pos = getWorldPosByName(followTarget, simTimeDays);
@@ -625,8 +676,9 @@
         }
 
         // ============================================================
-        // 6. ОТРИСОВКА
+        // 6. ОТРИСОВКА / RENDERING
         // ============================================================
+        // Перевод мировых координат в экранные / Convert world coordinates to screen coordinates
         function screenPos(worldX, worldY) {
             return {
                 x: worldX * scale + W/2 + offsetX,
@@ -634,6 +686,7 @@
             };
         }
 
+        // Форматирование даты / Format date
         function formatDate(d) {
             const y = d.getUTCFullYear();
             const m = String(d.getUTCMonth() + 1).padStart(2, '0');
@@ -644,11 +697,13 @@
             return `${y}.${m}.${day} ${h}:${min}:${s}`;
         }
 
+        // Обновление HUD (таймер и скорость) / Update HUD (timer and speed)
         function updateHUD() {
             const currentDate = new Date(startDate.getTime() + simTimeDays * 86400 * 1000);
             hud.textContent = `${formatDate(currentDate)} | Скорость: ${timeScale}x`;
         }
 
+        // Отрисовка орбиты / Draw orbit
         function drawOrbit(body, parentWorldPos) {
             const a = body.aWorld !== undefined ? body.aWorld : (body.a * CONFIG.sunRadius);
             const e = body.e;
@@ -684,6 +739,7 @@
             ctx.stroke();
         }
 
+        // Отрисовка свечения вокруг объекта / Draw glow around object
         function drawGlow(screenX, screenY, color) {
             const glowRadius = Math.min(CONFIG.maxGlowPx, CONFIG.minGlowPx / scale);
             if (glowRadius <= 0) return;
@@ -696,10 +752,11 @@
             ctx.fill();
         }
 
+        // Рекурсивная отрисовка тела и его спутников / Recursively draw body and its satellites
         function drawBody(body, parentWorldPos) {
-            if (body.showOrbit !== false) {       // проверяем флаг
+            if (body.showOrbit !== false) { // Проверка флага showOrbit / Check showOrbit flag
                 drawOrbit(body, parentWorldPos);
-            }    
+            }
             const localPos = getLocalOrbitPos(body, simTimeDays);
             const worldPos = {
                 x: parentWorldPos.x + localPos.x,
@@ -710,21 +767,20 @@
 
             drawGlow(screen.x, screen.y, body.color);
 
+            // Отрисовка кольца, если есть / Draw ring if exists
             if (body.ring) {
                 const innerR = radius * body.ring.innerFactor;
                 const outerR = radius * body.ring.outerFactor;
                 ctx.beginPath();
-                // Внешняя окружность
                 ctx.arc(screen.x, screen.y, outerR, 0, Math.PI * 2);
-                // Внутренняя окружность (против часовой, чтобы получился бублик)
                 ctx.arc(screen.x, screen.y, innerR, 0, Math.PI * 2, true);
                 ctx.closePath();
-                // Преобразуем alpha в hex-строку для цвета
                 const alphaHex = Math.floor(body.ring.alpha * 255).toString(16).padStart(2, '0');
                 ctx.fillStyle = body.ring.color + alphaHex;
                 ctx.fill();
             }
 
+            // Отрисовка самой планеты / Draw planet itself
             ctx.beginPath();
             ctx.arc(screen.x, screen.y, radius, 0, Math.PI * 2);
             ctx.fillStyle = body.color;
@@ -734,6 +790,7 @@
             ctx.fill();
             ctx.shadowBlur = 0;
 
+            // Определение, рисовать ли подпись / Decide whether to draw label
             let drawLabel = true;
             if (body.parent) {
                 const parentScreen = screenPos(parentWorldPos.x, parentWorldPos.y);
@@ -749,10 +806,12 @@
                 ctx.fillText(body.nameRu, screen.x, screen.y - radius - 10);
             }
 
+            // Сохранение экранных координат для обработки кликов / Save screen coords for click handling
             body._screenX = screen.x;
             body._screenY = screen.y;
             body._radius = radius;
 
+            // Рекурсивно рисуем спутники / Recursively draw satellites
             if (body.satellites) {
                 for (const sat of body.satellites) {
                     drawBody(sat, worldPos);
@@ -760,13 +819,14 @@
             }
         }
 
+        // Главная функция отрисовки / Main draw function
         function draw() {
             ctx.fillStyle = CONFIG.bgColor;
             const dpr = window.devicePixelRatio || 1;
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             ctx.fillRect(0, 0, W, H);
 
-            // Солнце
+            // Отрисовка Солнца / Draw Sun
             const sunScreen = screenPos(0, 0);
             const sunRadius = CONFIG.sunRadius * scale;
             ctx.beginPath();
@@ -777,12 +837,12 @@
             ctx.fill();
             ctx.shadowBlur = 0;
 
-            // Планеты
+            // Отрисовка планет / Draw planets
             for (const body of CONFIG.planetData) {
                 drawBody(body, { x: 0, y: 0 });
             }
 
-            // Пояс астероидов (вращается)
+            // Отрисовка пояса астероидов (вращается) / Draw rotating asteroid belt
             if (CONFIG.asteroidBelt.enabled) {
                 ctx.fillStyle = CONFIG.asteroidBelt.color;
                 const periodDays = CONFIG.asteroidBelt.periodDays || 1500;
@@ -798,12 +858,13 @@
         }
 
         // ============================================================
-        // 7. ЗУМ
+        // 7. ЗУМ / ZOOM
         // ============================================================
+        // Функция масштабирования к точке / Zoom to point
         function zoomAtPoint(factor, px, py) {
             const oldScale = scale;
             const newScale = Math.max(CONFIG.minScale, Math.min(CONFIG.maxScale, scale * factor));
-            
+
             let zoomPointX = px;
             let zoomPointY = py;
             if (followActive && followTarget) {
@@ -813,14 +874,14 @@
                     zoomPointY = pos.y * oldScale + H/2 + offsetY;
                 }
             }
-            
+
             const worldX = (zoomPointX - W/2 - offsetX) / oldScale;
             const worldY = (zoomPointY - H/2 - offsetY) / oldScale;
-            
+
             offsetX = zoomPointX - W/2 - worldX * newScale;
             offsetY = zoomPointY - H/2 - worldY * newScale;
             scale = newScale;
-            
+
             if (followActive && followTarget) {
                 const pos = getWorldPosByName(followTarget, simTimeDays);
                 if (pos) {
@@ -836,8 +897,9 @@
         }
 
         // ============================================================
-        // 8. УПРАВЛЕНИЕ МЫШЬЮ
+        // 8. УПРАВЛЕНИЕ МЫШЬЮ / MOUSE CONTROLS
         // ============================================================
+        // Наведение курсора / Mouse hover
         canvas.addEventListener('mousemove', (e) => {
             if (dragging) {
                 if (followActive) stopFollow();
@@ -873,6 +935,7 @@
             if (!checkHover(CONFIG.planetData)) canvas.classList.remove('pointer');
         });
 
+        // Нажатие кнопки мыши / Mouse down
         canvas.addEventListener('mousedown', (e) => {
             if (e.button === 0) {
                 dragging = true;
@@ -883,6 +946,7 @@
         });
         window.addEventListener('mouseup', () => { dragging = false; });
 
+        // Колесо мыши / Mouse wheel
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
             const rect = canvas.getBoundingClientRect();
@@ -894,6 +958,7 @@
             zoomAtPoint(factor, px, py);
         }, { passive: false });
 
+        // Клик мышью / Mouse click
         canvas.addEventListener('click', (e) => {
             const rect = canvas.getBoundingClientRect();
             const mx = e.clientX - rect.left;
@@ -908,14 +973,14 @@
                     if (dx*dx + dy*dy < hitRadius * hitRadius) {
                         clickedAny = true;
                         if (menuExcluded.includes(p.name)) {
-                            // Для исключённых объектов включаем слежение
+                            // Для исключённых объектов включаем слежение / For excluded objects enable follow
                             if (followActive && followTarget === p.name) {
                                 stopFollow();
                             } else {
                                 startFollow(p.name);
                             }
                         } else {
-                            // Открываем меню и сразу включаем слежение
+                            // Открываем меню и сразу включаем слежение / Open menu and start follow
                             showMenu(p);
                             if (!followActive || followTarget !== p.name) {
                                 startFollow(p.name);
@@ -930,7 +995,7 @@
                 return false;
             }
             if (!handleBodyClick(CONFIG.planetData)) {
-                // Клик по пустому месту
+                // Клик по пустому месту / Click on empty space
                 hideMenu();
                 if (followActive) {
                     stopFollow();
@@ -939,14 +1004,16 @@
         });
 
         // ============================================================
-        // 9. СЕНСОРНОЕ УПРАВЛЕНИЕ
+        // 9. СЕНСОРНОЕ УПРАВЛЕНИЕ / TOUCH CONTROLS
         // ============================================================
         let lastTouchX = 0, lastTouchY = 0;
         let lastPinchDist = 0;
+        let lastPinchMidX = 0, lastPinchMidY = 0;
         let isTouching = false;
         let touchesCount = 0;
         let touchStartX = 0, touchStartY = 0;
 
+        // Обработка начала касания / Touch start
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const touches = e.touches;
@@ -963,17 +1030,22 @@
                 dragging = false;
                 if (followActive) stopFollow();
                 lastPinchDist = 0;
+                lastPinchMidX = 0;
+                lastPinchMidY = 0;
             } else if (touchesCount === 2) {
                 const t1 = touches[0];
                 const t2 = touches[1];
                 const dx = t1.clientX - t2.clientX;
                 const dy = t1.clientY - t2.clientY;
                 lastPinchDist = Math.sqrt(dx*dx + dy*dy);
+                lastPinchMidX = (t1.clientX + t2.clientX) / 2;
+                lastPinchMidY = (t1.clientY + t2.clientY) / 2;
                 isTouching = true;
                 dragging = false;
             }
         }, { passive: false });
 
+        // Движение пальцев / Touch move
         canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
             const touches = e.touches;
@@ -1001,22 +1073,36 @@
                 const dx = t1.clientX - t2.clientX;
                 const dy = t1.clientY - t2.clientY;
                 const dist = Math.sqrt(dx*dx + dy*dy);
+                const midX = (t1.clientX + t2.clientX) / 2;
+                const midY = (t1.clientY + t2.clientY) / 2;
+
                 if (lastPinchDist > 0) {
-                    let factor = dist / lastPinchDist;
-                    factor = Math.max(0.8, Math.min(1.25, factor));
-                    const rect = canvas.getBoundingClientRect();
-                    const px = (t1.clientX + t2.clientX) / 2 - rect.left;
-                    const py = (t1.clientY + t2.clientY) / 2 - rect.top;
-                    zoomAtPoint(factor, px, py);
+                    // 1) Панорамирование: сдвигаем камеру на смещение центра
+                    const deltaX = midX - lastPinchMidX;
+                    const deltaY = midY - lastPinchMidY;
+                    offsetX += deltaX;
+                    offsetY += deltaY;
+
+                    // 2) Масштабирование вокруг нового центра
+                    const factor = dist / lastPinchDist; // без ограничений для плавности
+                    zoomAtPoint(factor, midX, midY);
                 }
+
+                // Обновляем сохранённые значения
                 lastPinchDist = dist;
+                lastPinchMidX = midX;
+                lastPinchMidY = midY;
                 dragging = false;
             }
         }, { passive: false });
 
-        canvas.addEventListener('touchend', (e) => {
+        // Окончание касания / Touch end
+                canvas.addEventListener('touchend', (e) => {
             e.preventDefault();
-            if (e.touches.length === 0) {
+            const remainingTouches = e.touches;
+
+            if (remainingTouches.length === 0) {
+                // Полное отпускание всех пальцев
                 if (isTouching && touchesCount === 1) {
                     const dist = Math.hypot(touchStartX - lastTouchX, touchStartY - lastTouchY);
                     if (dist < 10) {
@@ -1052,23 +1138,37 @@
                         }
                         if (!handleTap(CONFIG.planetData)) {
                             hideMenu();
-                            if (followActive) {
-                                stopFollow();
-                            }
+                            if (followActive) stopFollow();
                         }
                     }
                 }
-            }  
-            isTouching = false;
-            dragging = false;
-            lastPinchDist = 0;
-            touchesCount = 0;
-        }, { passive: false });          
+                isTouching = false;
+                dragging = false;
+                lastPinchDist = 0;
+                touchesCount = 0;
+            } else if (remainingTouches.length === 1) {
+                // Остался один палец – переключаемся в режим панорамирования
+                const t = remainingTouches[0];
+                lastTouchX = t.clientX;
+                lastTouchY = t.clientY;
+                touchStartX = t.clientX;
+                touchStartY = t.clientY;
+                dragStartX = t.clientX;
+                dragStartY = t.clientY;
+                isTouching = true;
+                dragging = false;
+                touchesCount = 1;
+                lastPinchDist = 0;
+                lastPinchMidX = 0;
+                lastPinchMidY = 0;
+            }
+        }, { passive: false });
 
         // ============================================================
-        // 10. УПРАВЛЕНИЕ СКОРОСТЬЮ ВРЕМЕНИ
+        // 10. УПРАВЛЕНИЕ СКОРОСТЬЮ ВРЕМЕНИ (отключено) / TIME SCALE CONTROLS (disabled)
         // ============================================================
-        /*window.addEventListener('keydown', (e) => {
+        /*
+        window.addEventListener('keydown', (e) => {
             if (e.key === '+' || e.key === '=') {
                 e.preventDefault();
                 if (timeScaleIndex < CONFIG.timeScales.length - 1) {
@@ -1084,10 +1184,11 @@
                     console.log(`Скорость времени: ${timeScale}x`);
                 }
             }
-        });*/
+        });
+        */
 
         // ============================================================
-        // 11. ГЛАВНЫЙ ЦИКЛ
+        // 11. ГЛАВНЫЙ ЦИКЛ / MAIN LOOP
         // ============================================================
         function animate(timestamp) {
             if (!lastTimestamp) lastTimestamp = timestamp;
@@ -1095,7 +1196,7 @@
             lastTimestamp = timestamp;
 
             const deltaSeconds = deltaMs / 1000;
-            simTimeDays += (deltaSeconds * timeScale) / 86400;
+            simTimeDays += (deltaSeconds * timeScale) / 86400; // Обновление игрового времени / Update simulation time
 
             if (followActive) updateFollow();
             draw();
@@ -1105,8 +1206,9 @@
         }
 
         // ============================================================
-        // 12. СОХРАНЕНИЕ И ВОССТАНОВЛЕНИЕ СОСТОЯНИЯ
+        // 12. СОХРАНЕНИЕ И ВОССТАНОВЛЕНИЕ СОСТОЯНИЯ / SAVE & RESTORE STATE
         // ============================================================
+        // Сохранение состояния в localStorage / Save state to localStorage
         function saveState() {
             try {
                 const state = {
@@ -1120,10 +1222,11 @@
                 };
                 localStorage.setItem('expanse_map_state', JSON.stringify(state));
             } catch (e) {
-                // localStorage может быть недоступен — игнорируем
+                // localStorage может быть недоступен / localStorage might be unavailable
             }
         }
 
+        // Загрузка состояния из localStorage / Load state from localStorage
         function loadState() {
             try {
                 const saved = localStorage.getItem('expanse_map_state');
@@ -1139,24 +1242,24 @@
                 }
                 if (state.followActive && state.followTarget) {
                     startFollow(state.followTarget);
-                    // Жёстко переходим к цели без плавного подъезда
-                    followSmooth = false;
+                    followSmooth = false; // Жёстко переходим к цели / Hard jump to target
                     updateFollow();
                 }
             } catch (e) {
-                // Ошибка при восстановлении — игнорируем
+                // Ошибка восстановления / Restore error
             }
         }
 
-        // Вызываем восстановление при старте
+        // Вызываем восстановление при старте / Call restore on startup
         loadState();
 
-        // Сохраняем состояние каждые 3 секунды
+        // Сохраняем состояние каждые 3 секунды / Save every 3 seconds
         setInterval(saveState, 3000);
 
-        // Сохраняем при закрытии страницы
+        // Сохраняем при закрытии страницы / Save on page close
         window.addEventListener('beforeunload', saveState);
 
+        // Запуск анимации / Start animation
         requestAnimationFrame(animate);
     </script>
 </body>
