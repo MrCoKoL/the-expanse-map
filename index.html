@@ -510,8 +510,7 @@
         // --- ВРЕМЯ / TIME ---
         const startDate = new Date(Date.UTC(2350, 0, 1, 0, 0, 0)); // Стартовая дата: 2350-01-01 UTC
         let simTimeDays = 0;                     // Игровое время в днях / Simulation time in days
-        let timeScaleIndex = 1;                  // Индекс текущей скорости (1 = 60x) / Current time scale index
-        let timeScale = CONFIG.timeScales[timeScaleIndex]; // Множитель скорости / Speed multiplier
+        let timeScale = 30; // Множитель скорости / Speed multiplier
         let lastTimestamp = 0;                   // Последняя метка времени для delta / Last timestamp for delta
         const SERVER_URL = "https://the-expanse-map.mrcokol.deno.net"; // замени на свой URL
         let lastServerSync = 0;
